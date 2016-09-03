@@ -62,7 +62,7 @@ function getHttp(theUrl, discard, callback) {
 
 }
 
-function downloadSpeed(urls, maxTime, callback) {
+exports.downloadSpeed = function (urls, maxTime, callback) {
 
   callback = once(callback);
 
@@ -207,7 +207,7 @@ function randomPutHttp(theUrl, size, callback) {
   write();
 }
 
-function uploadSpeed(url, sizes, maxTime, callback) {
+exports.uploadSpeed = function (url, sizes, maxTime, callback) {
 
   callback = once(callback);
 
@@ -281,51 +281,3 @@ function uploadSpeed(url, sizes, maxTime, callback) {
     next(); //Try another
   }
 }
-
-var self = new EventEmitter();
-
-var downloadUrls = ['http://tpdb.speed2.hinet.net/test_100m.zip'];
-
-downloadSpeed.call(self, downloadUrls, 10000, function(err, speed) {
-  var fixed = speed * speedTestDownloadCorrectionFactor / 125000;
-  console.log("Download: " + fixed);
-});
-
-//http://208.54.87.70/speedtest/upload.jsp
-//http://spt.oms.fcu.edu.tw/minisp/speedtest/upload.php
-//http://localhost:3000/
-//http://jenkins.trunk.studio:5999/
-//http://linode1.trunksys.com:5999/
-//http://linode0.trunksys.com/http-speed-test/upload.php
-
-var uploadUrl = 'http://spt.oms.fcu.edu.tw/minisp/speedtest/upload.php';
-
-var sizes     = []
-  , sizesizes = [
-      Math.round(0.25 * 1000 * 1000),
-      Math.round(0.5 * 1000 * 1000),
-      Math.round(1 * 1000 * 1000),
-      Math.round(2 * 1000 * 1000),
-      Math.round(4 * 1000 * 1000),
-      Math.round(8 * 1000 * 1000),
-      Math.round(16 * 1000 * 1000),
-      Math.round(32 * 1000 * 1000)
-    ]
-  , sizesize
-  , n
-  , i
-  ;
-
-for (n = 0; n < sizesizes.length; n++) {
-  sizesize = sizesizes[n];
-  for (i = 0; i < 25; i++) {
-    sizes.push(sizesize);
-  }
-}
-
-uploadSpeed.call(self, uploadUrl, sizes, 10000, function(err, speed) {
-  var fixed = speed * speedTestUploadCorrectionFactor / 125000;
-  console.log("Upload: " + fixed);
-});
-
-//'http://tpdb.speed2.hinet.net/test_010m.zip'
