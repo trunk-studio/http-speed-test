@@ -144,7 +144,7 @@ function randomPutHttp(theUrl, size, callback) {
 
   var options = theUrl
     , headers = {
-        'user-agent':     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20100101 Firefox/24.0',
+        'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20100101 Firefox/24.0',
         'content-length': size
       }
     , toSend  = size
@@ -154,7 +154,6 @@ function randomPutHttp(theUrl, size, callback) {
     ;
 
   if (typeof options === "string") options = url.parse(theUrl);
-
 
   options.headers = options.headers || {};
 
@@ -224,18 +223,14 @@ function uploadSpeed(url, sizes, maxTime, callback) {
 
   maxTime = (maxTime || 10000) / 1000;
 
-  if (this.emit) {
-    emit = this.emit.bind(this);
-  } else {
-    emit = function() {};
-  }
+  emit = this.emit?this.emit.bind(this):function(){};
 
   next();
 
   timeStart = process.hrtime();
 
   function next() {
-    if (started >= todo) return; //all are started
+    if (started >= todo) return;
     if (running >= concurrent) return;
     running++;
     var starting = started
@@ -245,7 +240,7 @@ function uploadSpeed(url, sizes, maxTime, callback) {
     started++;
     //started=(started+1) % todo; //Keep staing more until the time is up...
 
-    randomPutHttp(url, size, function(err, count) { //discard all data and return byte count
+    randomPutHttp(url, size, function(err, count) {
       if (done >= todo) return;
       if (err) {
         count = 0;
@@ -257,7 +252,7 @@ function uploadSpeed(url, sizes, maxTime, callback) {
         , fixed
         ;
 
-      diff = diff[0] + diff[1] * 1e-9; //seconds
+      diff = diff[0] + diff[1] * 1e-9;
 
       running--;
       totalBytes += count;
@@ -298,8 +293,12 @@ downloadSpeed.call(self, downloadUrls, 10000, function(err, speed) {
 
 //http://208.54.87.70/speedtest/upload.jsp
 //http://spt.oms.fcu.edu.tw/minisp/speedtest/upload.php
+//http://localhost:3000/
+//http://jenkins.trunk.studio:5999/
+//http://linode1.trunksys.com:5999/
+//http://linode0.trunksys.com/http-speed-test/upload.php
 
-var uploadUrl = 'http://localhost:3000/';
+var uploadUrl = 'http://spt.oms.fcu.edu.tw/minisp/speedtest/upload.php';
 
 var sizes     = []
   , sizesizes = [
