@@ -123,8 +123,8 @@ function downloadSpeed(urls, maxTime, callback) {
         done = todo;
       }
       if (done <= todo) {
-        emit('downloadprogress', Math.round(Math.min(Math.max(timePct, amtPct), 100.0) * 10) / 10);
-        emit('downloadspeedprogress', fixed)
+        // emit('downloadprogress', Math.round(Math.min(Math.max(timePct, amtPct), 100.0) * 10) / 10);
+        // emit('downloadspeedprogress', fixed)
       }
       if (done >= todo) {
         callback(null, speed); //bytes/sec
@@ -273,8 +273,8 @@ function uploadSpeed(url, sizes, maxTime, callback) {
         done = todo;
       }
       if (done <= todo) {
-        emit('uploadprogress', Math.round(Math.min(Math.max(timePct, amtPct), 100.0) * 10) / 10);
-        emit('uploadspeedprogress', fixed)
+        // emit('uploadprogress', Math.round(Math.min(Math.max(timePct, amtPct), 100.0) * 10) / 10);
+        // emit('uploadspeedprogress', fixed)
       }
       if (done >= todo) {
         callback(null, speed); //bytes/sec
@@ -291,12 +291,15 @@ var self = new EventEmitter();
 
 var downloadUrls = ['http://tpdb.speed2.hinet.net/test_100m.zip'];
 
-downloadSpeed.call(self, downloadUrls, 100000, function(err, speed) {
+downloadSpeed.call(self, downloadUrls, 10000, function(err, speed) {
   var fixed = speed * speedTestDownloadCorrectionFactor / 125000;
   console.log("Download: " + fixed);
 });
 
-var uploadUrl = 'http://208.54.87.70/speedtest/upload.jsp';
+//http://208.54.87.70/speedtest/upload.jsp
+//http://spt.oms.fcu.edu.tw/minisp/speedtest/upload.php
+
+var uploadUrl = 'http://localhost:3000/';
 
 var sizes     = []
   , sizesizes = [
@@ -321,7 +324,7 @@ for (n = 0; n < sizesizes.length; n++) {
   }
 }
 
-uploadSpeed.call(self, uploadUrl, sizes, 100000, function(err, speed) {
+uploadSpeed.call(self, uploadUrl, sizes, 10000, function(err, speed) {
   var fixed = speed * speedTestUploadCorrectionFactor / 125000;
   console.log("Upload: " + fixed);
 });
