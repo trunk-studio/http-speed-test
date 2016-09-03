@@ -137,14 +137,193 @@ function downloadSpeed(urls, maxTime, callback) {
   }
 }
 
+function randomPutHttp(theUrl, size, callback) {
+  callback = once(callback);
+
+  size = (size || 131072) | 0;
+
+  var options = theUrl
+    , headers = {
+        'user-agent':     'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:24.0) Gecko/20100101 Firefox/24.0',
+        'content-length': size
+      }
+    , toSend  = size
+    , sent1   = false
+    , dataBlock
+    , http
+    ;
+
+  if (typeof options === "string") options = url.parse(theUrl);
+
+
+  options.headers = options.headers || {};
+
+  for (var h in headers) {
+    options.headers[h] = options.headers[h] || headers[h];
+  }
+
+  options.method = 'POST';
+
+  dataBlock = (function() {
+    var d = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    while (d.length < 1024 * 16) d += d;
+    return d.substr(0, 1024 * 16);
+  }());
+
+  http = options.protocol == 'https:' ? require('https') : require('http');
+
+  delete options.protocol;
+
+  var req = http.request(options, function(res) {
+    var data = '';
+    res.on('error', callback);
+    res.on('data', function(newData) {
+      //discard
+    });
+    res.on('end', function() {
+      //discard data
+      callback(null, size); //return original size
+    });
+  });
+
+  req.on('error', callback);
+
+  function write() {
+    do {
+      if (!toSend) {
+        return; //we're done sending...
+      }
+      var data = dataBlock;
+      if (!sent1) {
+        sent1 = true;
+        data = 'content1=' + data;
+      }
+      data = data.substr(0, toSend);
+      toSend -= data.length;
+    } while (req.write(data));
+  }
+
+  req.on('drain', write);
+
+  write();
+}
+
+function uploadSpeed(url, sizes, maxTime, callback) {
+
+  callback = once(callback);
+
+  var concurrent = 2
+    , running = 0
+    , started = 0
+    , done = 0
+    , todo = sizes.length
+    , totalBytes = 0
+    , emit
+    , timeStart
+    ;
+
+  maxTime = (maxTime || 10000) / 1000;
+
+  if (this.emit) {
+    emit = this.emit.bind(this);
+  } else {
+    emit = function() {};
+  }
+
+  next();
+
+  timeStart = process.hrtime();
+
+  function next() {
+    if (started >= todo) return; //all are started
+    if (running >= concurrent) return;
+    running++;
+    var starting = started
+      , size     = sizes[starting]
+      ;
+
+    started++;
+    //started=(started+1) % todo; //Keep staing more until the time is up...
+
+    randomPutHttp(url, size, function(err, count) { //discard all data and return byte count
+      if (done >= todo) return;
+      if (err) {
+        count = 0;
+      }
+      var diff = process.hrtime(timeStart)
+        , timePct
+        , amtPct
+        , speed
+        , fixed
+        ;
+
+      diff = diff[0] + diff[1] * 1e-9; //seconds
+
+      running--;
+      totalBytes += count;
+      done++;
+      speed = totalBytes / diff;
+      fixed = speed * speedTestUploadCorrectionFactor / 125000;
+
+      timePct = diff / maxTime * 100;
+      amtPct = done / todo * 100;
+      //amtPct=0; //time-only
+
+      if (diff > maxTime) {
+        done = todo;
+      }
+      if (done <= todo) {
+        emit('uploadprogress', Math.round(Math.min(Math.max(timePct, amtPct), 100.0) * 10) / 10);
+        emit('uploadspeedprogress', fixed)
+      }
+      if (done >= todo) {
+        callback(null, speed); //bytes/sec
+      } else {
+        next();
+      }
+    });
+
+    next(); //Try another
+  }
+}
+
 var self = new EventEmitter();
 
-var urls = ['http://tpdb.speed2.hinet.net/test_010m.zip'];
+var downloadUrls = ['http://tpdb.speed2.hinet.net/test_100m.zip'];
 
-downloadSpeed.call(self, urls, 50000, function(err, speed) {
+downloadSpeed.call(self, downloadUrls, 100000, function(err, speed) {
   var fixed = speed * speedTestDownloadCorrectionFactor / 125000;
+  console.log("Download: " + fixed);
+});
 
-  console.log(fixed);
+var uploadUrl = 'http://208.54.87.70/speedtest/upload.jsp';
+
+var sizes     = []
+  , sizesizes = [
+      Math.round(0.25 * 1000 * 1000),
+      Math.round(0.5 * 1000 * 1000),
+      Math.round(1 * 1000 * 1000),
+      Math.round(2 * 1000 * 1000),
+      Math.round(4 * 1000 * 1000),
+      Math.round(8 * 1000 * 1000),
+      Math.round(16 * 1000 * 1000),
+      Math.round(32 * 1000 * 1000)
+    ]
+  , sizesize
+  , n
+  , i
+  ;
+
+for (n = 0; n < sizesizes.length; n++) {
+  sizesize = sizesizes[n];
+  for (i = 0; i < 25; i++) {
+    sizes.push(sizesize);
+  }
+}
+
+uploadSpeed.call(self, uploadUrl, sizes, 100000, function(err, speed) {
+  var fixed = speed * speedTestUploadCorrectionFactor / 125000;
+  console.log("Upload: " + fixed);
 });
 
 //'http://tpdb.speed2.hinet.net/test_010m.zip'
